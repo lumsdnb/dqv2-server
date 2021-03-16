@@ -20,7 +20,7 @@ io.on('connection', (socket) => {
   /* ... */
 });
 
-let allClients = [{ id: 'hiiii uwu', name: 'bob', role: 'affirmative' }];
+let allClients = [];
 
 function pushToArray(arr, obj) {
   const index = arr.findIndex((e) => e.id === obj.id);

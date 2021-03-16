@@ -15,20 +15,47 @@ const options = {
 };
 
 const io = require('socket.io')(server, options);
+
 io.on('connection', (socket) => {
   /* ... */
 });
 
+let allClients = [{ id: 'hiiii uwu', name: 'bob', role: 'affirmative' }];
+
+function pushToArray(arr, obj) {
+  const index = arr.findIndex((e) => e.id === obj.id);
+  console.log(index);
+  if (index === -1) {
+    console.log('new user, pushing to array');
+    arr.push(obj);
+  } else {
+    console.log('overwriting role');
+    arr[index] = obj;
+  }
+}
+
 io.on('connection', (socket) => {
+  //socket.emit('user list', allClients);
   socket.emit('your id', socket.id);
-  console.log('New client connected');
+  console.log(socket.id + ' has connected');
+
+  socket.on('set user', (user) => {
+    pushToArray(allClients, { id: user.id, name: user.name, role: user.role });
+
+    console.log(user);
+    io.emit('user list', allClients);
+  });
+
   socket.on('send message', (body) => {
     io.emit('message', body);
     console.log(body);
   });
 
   socket.on('disconnect', () => {
-    console.log('Client disconnected');
+    var i = allClients.findIndex((x) => x.ID === socket.id);
+
+    console.log(allClients);
+    allClients.splice(i, 1);
   });
 });
 

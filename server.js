@@ -37,6 +37,7 @@ function pushToArray(arr, obj) {
 io.on('connection', (socket) => {
   //socket.emit('user list', allClients);
   socket.emit('your id', socket.id);
+  socket.emit('user list', allClients);
   console.log(socket.id + ' has connected');
 
   socket.on('set user', (user) => {

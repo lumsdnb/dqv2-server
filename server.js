@@ -7,19 +7,13 @@ const index = require('./routes/index');
 const app = express();
 app.use(index);
 
-app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", '*');
-    res.header("Access-Control-Allow-Credentials", true);
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-    res.header("Access-Control-Allow-Headers", 'Origin,X-Requested-With,Content-Type,Accept,content-type,application/json');
-    next();
-});
-
 const server = http.createServer(app);
 
 const options = {
   cors: true,
-  origins: ['http://127.0.0.1:5347'],
+  origin: 'https://cardgame-server-master.herokuapp.com:5347',
+  methods: ["GET", "POST"],
+  credentials: true
 };
 
 const io = require('socket.io')(server, options);

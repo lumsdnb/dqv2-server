@@ -7,6 +7,14 @@ const index = require('./routes/index');
 const app = express();
 app.use(index);
 
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", '*');
+    res.header("Access-Control-Allow-Credentials", true);
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+    res.header("Access-Control-Allow-Headers", 'Origin,X-Requested-With,Content-Type,Accept,content-type,application/json');
+    next();
+});
+
 const server = http.createServer(app);
 
 const options = {
@@ -35,7 +43,6 @@ function pushToArray(arr, obj) {
 }
 
 io.on('connection', (socket) => {
-  //socket.emit('user list', allClients);
   socket.emit('your id', socket.id);
   socket.emit('user list', allClients);
   console.log(socket.id + ' has connected');

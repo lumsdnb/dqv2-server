@@ -11,20 +11,39 @@ const server = http.createServer(app);
 
 const options = {
   cors: true,
-  origin: 'https://cardgame-server-master.herokuapp.com:5347',
-  methods: ["GET", "POST"],
-  credentials: true
+  origin: [
+    'https://cardgame-server-master.herokuapp.com:5347',
+    'http://localhost:5347',
+  ],
+  methods: ['GET', 'POST'],
+  credentials: true,
 };
 
 const io = require('socket.io')(server, options);
 
-io.on('connection', (socket) => {
-  /* ... */
-});
-
 let allClients = [];
 
-function pushToArray(arr, obj) {
+let game = {
+  claim: '',
+  affirmativeID: '',
+  affirmativeName: '',
+  negativeID: '',
+  negativeName: '',
+  judgeID: '',
+  judgeName: '',
+  spectatorID: [],
+  round: 1,
+  cardList: [],
+};
+
+//  {
+//    body: 'fuk u',
+//    role: 'affirmative',
+//    judgeRating: 0,
+//    spectatorRating: 0,
+//  }
+
+function pushToUserArray(arr, obj) {
   const index = arr.findIndex((e) => e.id === obj.id);
   console.log(index);
   if (index === -1) {
@@ -36,26 +55,62 @@ function pushToArray(arr, obj) {
   }
 }
 
+function pushToCardList(arr, obj) {}
+
 io.on('connection', (socket) => {
   socket.emit('your id', socket.id);
-  socket.emit('user list', allClients);
+  socket.emit('game', game);
   console.log(socket.id + ' has connected');
 
-  socket.on('set user', (user) => {
-    pushToArray(allClients, { id: user.id, name: user.name, role: user.role });
+  socket.on('set topic', (topic) => {
+    game.claim = topic;
+    console.log(game);
+    io.emit('topic', topic);
+  });
+  socket.on('rate card', (msg) => {
+    if (game.judgeID == socket.id)
+      game.cardList[msg.index].judgeRating = msg.rating;
+    if (game.spectatorID == socket.id)
+      game.cardList[msg.index].spectatorRating = msg.rating;
+  });
 
-    console.log(user);
-    io.emit('user list', allClients);
+  socket.on('set user', (user) => {
+    switch (user.role) {
+      case 'affirmative':
+        game.affirmativeID = socket.id;
+        game.affirmativeName = user.name;
+        break;
+      case 'negative':
+        game.negativeID = socket.id;
+        game.negativeName = user.name;
+        break;
+      case 'judge':
+        game.judgeID = socket.id;
+        game.judgeName = user.name;
+        break;
+      case 'spectator':
+        game.spectatorID.push = socket.id;
+      default:
+        break;
+    }
+    console.log('user ' + socket.id + ' has set their role to ' + user.role);
+    io.emit('game', game);
+    //io.emit('user list', allClients);
+  });
+
+  socket.on('start round', (users) => {
+    io.emit('');
   });
 
   socket.on('send message', (body) => {
-    io.emit('message', body);
-    console.log(body);
+    game.cardList.push(body);
+    io.emit('message', game.cardList);
+    //io.emit('message', body);
+    console.log(game.cardList);
   });
 
   socket.on('disconnect', () => {
     var i = allClients.findIndex((x) => x.ID === socket.id);
-
     console.log(allClients);
     allClients.splice(i, 1);
   });

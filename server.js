@@ -101,12 +101,23 @@ io.on('connection', (socket) => {
   socket.on('start round', (users) => {
     io.emit('');
   });
-
-  socket.on('send message', (body) => {
-    game.cardList.push(body);
-    io.emit('message', game.cardList);
+  socket.on('send message', (msg) => {
+    if (game.judgeID != socket.id) {
+      game.cardList.push(msg);
+      io.emit('message', game.cardList);
+    }
+    if (game.judgeID == socket.id) {
+      io.emit('judge ruling', msg.body);
+    }
     //io.emit('message', body);
     console.log(game.cardList);
+  });
+  socket.on('next round', () => {
+    if (game.judgeID == socket.id) {
+      game.round += 1;
+      game.cardList = [];
+      io.emit('game', game);
+    }
   });
 
   socket.on('disconnect', () => {

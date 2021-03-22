@@ -1,5 +1,22 @@
 const express = require('express');
 const http = require('http');
+const fs = require('fs');
+
+let cardDeckOPNV = [];
+
+fs.readFile('./decks.json', 'utf8', (err, data) => {
+  if (err) {
+    console.log(`Error reading file from disk: ${err}`);
+  } else {
+    // parse JSON string to JSON object
+    const databases = JSON.parse(data);
+    cardDeckOPNV = databases;
+    // print all databases
+    databases.forEach((db) => {
+      console.log(`${db}`);
+    });
+  }
+});
 
 const port = process.env.PORT || 4001;
 const index = require('./routes/index');
@@ -95,6 +112,9 @@ io.on('connection', (socket) => {
     }
     console.log('user ' + socket.id + ' has set their role to ' + user.role);
     io.emit('game', game);
+    if (game.affirmativeID && game.negativeID && game.judgeID) {
+      io.emit('get ready');
+    }
     //io.emit('user list', allClients);
   });
 

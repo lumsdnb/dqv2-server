@@ -51,6 +51,7 @@ let game = {
   spectatorID: [],
   round: 1,
   cardList: [],
+  chatList: [],
 };
 
 //  {
@@ -86,9 +87,10 @@ io.on('connection', (socket) => {
   });
   socket.on('rate card', (msg) => {
     if (game.judgeID == socket.id)
-      game.cardList[msg.index].judgeRating = msg.rating;
+      game.cardList[msg.index].judgeRating += msg.rating;
     if (game.spectatorID == socket.id)
-      game.cardList[msg.index].spectatorRating = msg.rating;
+      game.cardList[msg.index].spectatorRating += msg.rating;
+    io.emit('game', game);
   });
 
   socket.on('set user', (user) => {
@@ -138,6 +140,15 @@ io.on('connection', (socket) => {
       game.cardList = [];
       io.emit('game', game);
     }
+  });
+
+  socket.on('chat message', (msg) => {
+    const msgObj = {
+      name: msg.name,
+      body: msg.body,
+    };
+    game.chatList.push(msg);
+    io.emit('chat messages', game.chatList);
   });
 
   socket.on('disconnect', () => {

@@ -2,42 +2,39 @@ const express = require('express');
 const http = require('http');
 const fs = require('fs');
 
+
+// ----------------- SERVER SETUP ----------------- 
+const port = process.env.PORT || 4000;
+const index = require('./routes/index');
+
+const app = express();
+app.use(index);
+
+
+const server = http.createServer(app);
+const io = require('socket.io')(server,{
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+    optionsSuccessStatus: 200
+  }
+});
+
+
+// ----------------- GAME LOGIC ----------------- 
 let cardDeckOPNV = [];
 
 fs.readFile('./decks.json', 'utf8', (err, data) => {
   if (err) {
     console.log(`Error reading file from disk: ${err}`);
   } else {
-    // parse JSON string to JSON object
-    const databases = JSON.parse(data);
-    cardDeckOPNV = databases;
+    cardDeckOPNV = JSON.parse(data);
     // print all databases
-    databases.forEach((db) => {
-      console.log(`${db}`);
-    });
+    //databases.forEach((db) => {
+    //  console.log(`${db}`);
+    //});
   }
 });
-
-const port = process.env.PORT || 4001;
-const index = require('./routes/index');
-
-const app = express();
-app.use(index);
-
-const server = http.createServer(app);
-
-const options = {
-  cors: true,
-  origin: [
-    'https://cardgame-server-master.herokuapp.com:5347',
-    'http://localhost:5347',
-  ],
-  methods: ['GET', 'POST'],
-  credentials: true,
-};
-
-const io = require('socket.io')(server, options);
-
 let allClients = [];
 
 let game = {
@@ -52,19 +49,20 @@ let game = {
   round: 1,
   cardList: [],
   chatList: [],
+  preparedDeck: cardDeckOPNV
 };
 
 //  {
-//    body: 'fuk u',
-//    role: 'affirmative',
-//    judgeRating: 0,
-//    spectatorRating: 0,
-//  }
-
-function pushToUserArray(arr, obj) {
-  const index = arr.findIndex((e) => e.id === obj.id);
-  console.log(index);
-  if (index === -1) {
+  //    body: 'fuk u',
+  //    role: 'affirmative',
+  //    judgeRating: 0,
+  //    spectatorRating: 0,
+  //  }
+  
+  function pushToUserArray(arr, obj) {
+    const index = arr.findIndex((e) => e.id === obj.id);
+    console.log(index);
+    if (index === -1) {
     console.log('new user, pushing to array');
     arr.push(obj);
   } else {
@@ -151,7 +149,12 @@ io.on('connection', (socket) => {
     io.emit('chat messages', game.chatList);
   });
 
+  socket.on("end game",(msg)=>{
+    io.emit("finish game",msg)
+  });
+
   socket.on('disconnect', () => {
+    //todo: reimplement this
     var i = allClients.findIndex((x) => x.ID === socket.id);
     console.log(allClients);
     allClients.splice(i, 1);

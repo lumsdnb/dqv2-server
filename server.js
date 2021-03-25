@@ -208,6 +208,10 @@ io.on('connection', (socket) => {
     io.emit('finish game', msg);
   });
 
+  socket.on('emit sound', (sound) => {
+    io.emit('emit sound', sound);
+  });
+
   socket.on('disconnect', () => {
     //todo: reimplement this
     var i = allClients.findIndex((x) => x.ID === socket.id);

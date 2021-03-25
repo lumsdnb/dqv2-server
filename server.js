@@ -2,26 +2,23 @@ const express = require('express');
 const http = require('http');
 const fs = require('fs');
 
-
-// ----------------- SERVER SETUP ----------------- 
+// ----------------- SERVER SETUP -----------------
 const port = process.env.PORT || 4000;
 const index = require('./routes/index');
 
 const app = express();
 app.use(index);
 
-
 const server = http.createServer(app);
-const io = require('socket.io')(server,{
+const io = require('socket.io')(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-    optionsSuccessStatus: 200
-  }
+    origin: '*',
+    methods: ['GET', 'POST'],
+    optionsSuccessStatus: 200,
+  },
 });
 
-
-// ----------------- GAME LOGIC ----------------- 
+// ----------------- GAME LOGIC -----------------
 let cardDeckOPNV = [];
 
 fs.readFile('./decks.json', 'utf8', (err, data) => {
@@ -49,20 +46,44 @@ let game = {
   round: 1,
   cardList: [],
   chatList: [],
-  preparedDeck: cardDeckOPNV
+  pastRounds: [],
+  preparedDeck: cardDeckOPNV,
+};
+
+const resetGame = {
+  claim: '',
+  affirmativeID: '',
+  affirmativeName: '',
+  negativeID: '',
+  negativeName: '',
+  judgeID: '',
+  judgeName: '',
+  spectatorID: [],
+  round: 1,
+  cardList: [],
+  chatList: [],
+  pastRounds: [],
+  preparedDeck: cardDeckOPNV,
+};
+
+const finalVotes = {
+  aff: '',
+  neg: '',
+  judge: '',
+  spectator1: '',
 };
 
 //  {
-  //    body: 'fuk u',
-  //    role: 'affirmative',
-  //    judgeRating: 0,
-  //    spectatorRating: 0,
-  //  }
-  
-  function pushToUserArray(arr, obj) {
-    const index = arr.findIndex((e) => e.id === obj.id);
-    console.log(index);
-    if (index === -1) {
+//    body: 'fuk u',
+//    role: 'affirmative',
+//    judgeRating: 0,
+//    spectatorRating: 0,
+//  }
+
+function pushToUserArray(arr, obj) {
+  const index = arr.findIndex((e) => e.id === obj.id);
+  console.log(index);
+  if (index === -1) {
     console.log('new user, pushing to array');
     arr.push(obj);
   } else {
@@ -134,10 +155,44 @@ io.on('connection', (socket) => {
   });
   socket.on('next round', () => {
     if (game.judgeID == socket.id) {
-      game.round += 1;
+      game.pastRounds.push(game.cardList);
+      console.log(`round ${game.round} - moving on..`);
       game.cardList = [];
-      io.emit('game', game);
+
+      if (game.round <= 4) {
+        game.round += 1;
+        io.emit('game', game);
+      }
+      if (game.round > 4) {
+        io.emit('game', game);
+        io.emit('please vote');
+      }
     }
+  });
+
+  socket.on('reset', () => {
+    console.log('game has been reset');
+    game = resetGame;
+    io.emit('game', game);
+  });
+  socket.on('send final vote', (obj) => {
+    switch (obj.role) {
+      case 'affirmative':
+        finalVotes.aff = obj.vote;
+        break;
+      case 'negative':
+        finalVotes.neg = obj.vote;
+      case 'judge':
+        finalVotes.judge = obj.vote;
+        break;
+      case 'spectator':
+        break;
+
+      default:
+        break;
+    }
+    console.log(finalVotes);
+    io.emit('final votes', finalVotes);
   });
 
   socket.on('chat message', (msg) => {
@@ -149,8 +204,8 @@ io.on('connection', (socket) => {
     io.emit('chat messages', game.chatList);
   });
 
-  socket.on("end game",(msg)=>{
-    io.emit("finish game",msg)
+  socket.on('end game', (msg) => {
+    io.emit('finish game', msg);
   });
 
   socket.on('disconnect', () => {

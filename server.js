@@ -195,6 +195,9 @@ io.on('connection', (socket) => {
     io.emit('final votes', finalVotes);
   });
 
+  socket.on('final ruling', (e) => {
+    io.emit('final ruling', e);
+  });
   socket.on('chat message', (msg) => {
     const msgObj = {
       name: msg.name,

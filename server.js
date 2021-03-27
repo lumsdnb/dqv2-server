@@ -36,6 +36,10 @@ let allClients = [];
 
 let game = {
   claim: '',
+  debater1ID: '',
+  debater1Name: '',
+  debater2ID: '',
+  debater2Name: '',
   affirmativeID: '',
   affirmativeName: '',
   negativeID: '',
@@ -52,6 +56,10 @@ let game = {
 
 const resetGame = {
   claim: '',
+  debater1ID: '',
+  debater1Name: '',
+  debater2ID: '',
+  debater2Name: '',
   affirmativeID: '',
   affirmativeName: '',
   negativeID: '',
@@ -114,13 +122,16 @@ io.on('connection', (socket) => {
 
   socket.on('set user', (user) => {
     switch (user.role) {
-      case 'affirmative':
-        game.affirmativeID = socket.id;
-        game.affirmativeName = user.name;
-        break;
-      case 'negative':
-        game.negativeID = socket.id;
-        game.negativeName = user.name;
+      case 'debater':
+        if (game.debater1ID == '') {
+          game.debater1ID = socket.id;
+          game.debater1Name = user.name;
+          break;
+        }
+        if (game.debater1ID != '') {
+          game.debater2ID = socket.id;
+          game.debater2Name = user.name;
+        }
         break;
       case 'judge':
         game.judgeID = socket.id;
@@ -131,6 +142,24 @@ io.on('connection', (socket) => {
       default:
         break;
     }
+    //if both players exist, decided what roles each get
+    if (game.debater1ID != '' && game.debater2ID != '') {
+      const rand = Math.random();
+      console.log(rand);
+      if (rand > 0.5) {
+        game.affirmativeID = game.debater1ID;
+        game.affirmativeName = game.debater1Name;
+        game.negativeID = game.debater2ID;
+        game.negativeName = game.debater2Name;
+      }
+      if (rand < 0.5) {
+        game.negativeID = game.debater1ID;
+        game.negativeName = game.debater1Name;
+        game.affirmativeID = game.debater2ID;
+        game.affirmativeName = game.debater2Name;
+      }
+    }
+    console.log(game);
     console.log('user ' + socket.id + ' has set their role to ' + user.role);
     io.emit('game', game);
     if (game.affirmativeID && game.negativeID && game.judgeID) {
@@ -173,6 +202,7 @@ io.on('connection', (socket) => {
   socket.on('reset', () => {
     console.log('game has been reset');
     game = resetGame;
+    console.log(game);
     io.emit('game', game);
   });
   socket.on('send final vote', (obj) => {

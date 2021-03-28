@@ -12,7 +12,7 @@ app.use(index);
 const server = http.createServer(app);
 const io = require('socket.io')(server, {
   cors: {
-    origin: 'https://wizardly-jones-f32119.netlify.app',
+    origin: '*',
     methods: ['GET', 'POST'],
     optionsSuccessStatus: 200,
   },

@@ -21,19 +21,6 @@ const io = require('socket.io')(server, {
 // ----------------- GAME LOGIC -----------------
 let cardDeckOPNV = [];
 
-fs.readFile('./decks.json', 'utf8', (err, data) => {
-  if (err) {
-    console.log(`Error reading file from disk: ${err}`);
-  } else {
-    cardDeckOPNV = JSON.parse(data);
-    // print all databases
-    //databases.forEach((db) => {
-    //  console.log(`${db}`);
-    //});
-  }
-});
-let allClients = [];
-
 let game = {
   claim: '',
   debater1ID: '',
@@ -62,10 +49,13 @@ const resetGame = {
   debater2Name: '',
   affirmativeID: '',
   affirmativeName: '',
+  affirmativeAvi: '',
   negativeID: '',
   negativeName: '',
+  negativeAvi: '',
   judgeID: '',
   judgeName: '',
+  judgeAvi: '',
   spectatorID: [],
   round: 1,
   cardList: [],
@@ -126,16 +116,19 @@ io.on('connection', (socket) => {
         if (game.debater1ID == '') {
           game.debater1ID = socket.id;
           game.debater1Name = user.name;
+          game.debater1Avi = user.avi;
           break;
         }
         if (game.debater1ID != '') {
           game.debater2ID = socket.id;
           game.debater2Name = user.name;
+          game.debater2Avi = user.avi;
         }
         break;
       case 'judge':
         game.judgeID = socket.id;
         game.judgeName = user.name;
+        game.judgeAvi = user.avi;
         break;
       case 'spectator':
         game.spectatorID.push = socket.id;
@@ -149,14 +142,18 @@ io.on('connection', (socket) => {
       if (rand > 0.5) {
         game.affirmativeID = game.debater1ID;
         game.affirmativeName = game.debater1Name;
+        game.affirmativeAvi = game.debater1Avi;
         game.negativeID = game.debater2ID;
         game.negativeName = game.debater2Name;
+        game.negativeAvi = game.debater2Avi;
       }
       if (rand < 0.5) {
         game.negativeID = game.debater1ID;
         game.negativeName = game.debater1Name;
+        game.negativeAvi = game.debater1Avi;
         game.affirmativeID = game.debater2ID;
         game.affirmativeName = game.debater2Name;
+        game.affirmativeAvi = game.debater2Avi;
       }
     }
     console.log(game);
@@ -165,7 +162,6 @@ io.on('connection', (socket) => {
     if (game.affirmativeID && game.negativeID && game.judgeID) {
       io.emit('get ready');
     }
-    //io.emit('user list', allClients);
   });
 
   socket.on('start round', (users) => {
@@ -234,6 +230,7 @@ io.on('connection', (socket) => {
       body: msg.body,
     };
     game.chatList.push(msg);
+    console.log(game.chatList);
     io.emit('chat messages', game.chatList);
   });
 
@@ -247,9 +244,9 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     //todo: reimplement this
-    var i = allClients.findIndex((x) => x.ID === socket.id);
-    console.log(allClients);
-    allClients.splice(i, 1);
+    //var i = allClients.findIndex((x) => x.ID === socket.id);
+    //console.log(allClients);
+    //allClients.splice(i, 1);
   });
 });
 

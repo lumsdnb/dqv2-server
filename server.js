@@ -105,8 +105,10 @@ io.on('connection', (socket) => {
   socket.on('rate card', (msg) => {
     if (game.judgeID == socket.id)
       game.cardList[msg.index].judgeRating += msg.rating;
-    if (game.spectatorID == socket.id)
+    if (game.spectatorID.includes(socket.id)) {
+      console.log('spec voting');
       game.cardList[msg.index].spectatorRating += msg.rating;
+    }
     io.emit('game', game);
   });
 
@@ -131,7 +133,7 @@ io.on('connection', (socket) => {
         game.judgeAvi = user.avi;
         break;
       case 'spectator':
-        game.spectatorID.push = socket.id;
+        game.spectatorID.push(socket.id);
       default:
         break;
     }
@@ -215,6 +217,7 @@ io.on('connection', (socket) => {
         finalVotes.judge = obj.vote;
         break;
       case 'spectator':
+        finalVotes.spectator = obj.vote;
         break;
 
       default:

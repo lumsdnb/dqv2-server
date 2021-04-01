@@ -167,15 +167,18 @@ io.on('connection', (socket) => {
   socket.on('start round', (users) => {
     io.emit('');
   });
+  socket.on('topic id', (id) => {
+    io.emit('topic id', id);
+  });
   socket.on('send message', (msg) => {
     if (game.judgeID != socket.id) {
       game.cardList.push(msg);
       io.emit('message', game.cardList);
+      io.emit('latest card', msg);
     }
     if (game.judgeID == socket.id) {
       io.emit('judge ruling', msg.body);
     }
-    //io.emit('message', body);
     console.log(game.cardList);
   });
   socket.on('next round', () => {

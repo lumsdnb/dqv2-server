@@ -22,6 +22,7 @@ const io = require('socket.io')(server, {
 
 let game = {
   claim: '',
+  topicID: 0,
   debater1ID: '',
   debater1Name: '',
   debater2ID: '',
@@ -73,6 +74,7 @@ function pushToCardList(arr, obj) {}
 io.on('connection', (socket) => {
   socket.emit('your id', socket.id);
   socket.emit('game', game);
+  socket.emit('topic id', game.topicID);
   console.log(socket.id + ' has connected');
 
   socket.on('set topic', (topic) => {
@@ -150,7 +152,8 @@ io.on('connection', (socket) => {
   socket.on('start round', (users) => {
     io.emit('');
   });
-  socket.on('topic id', (id) => {
+  socket.on('topic number', (id) => {
+    game.topicID = id;
     io.emit('topic id', id);
   });
   socket.on('send message', (msg) => {
@@ -173,6 +176,7 @@ io.on('connection', (socket) => {
       if (game.round <= 4) {
         game.round += 1;
         io.emit('game', game);
+        io.emit('next round');
       }
       if (game.round > 4) {
         io.emit('game', game);
@@ -184,6 +188,7 @@ io.on('connection', (socket) => {
   socket.on('reset', () => {
     const resetGame = {
       claim: '',
+      topicID: 0,
       debater1ID: '',
       debater1Name: '',
       debater2ID: '',

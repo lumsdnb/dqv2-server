@@ -19,29 +19,8 @@ const io = require('socket.io')(server, {
 });
 
 // ----------------- GAME LOGIC -----------------
-let cardDeckOPNV = [];
 
 let game = {
-  claim: '',
-  debater1ID: '',
-  debater1Name: '',
-  debater2ID: '',
-  debater2Name: '',
-  affirmativeID: '',
-  affirmativeName: '',
-  negativeID: '',
-  negativeName: '',
-  judgeID: '',
-  judgeName: '',
-  spectatorID: [],
-  round: 1,
-  cardList: [],
-  chatList: [],
-  pastRounds: [],
-  preparedDeck: cardDeckOPNV,
-};
-
-const resetGame = {
   claim: '',
   debater1ID: '',
   debater1Name: '',
@@ -61,7 +40,6 @@ const resetGame = {
   cardList: [],
   chatList: [],
   pastRounds: [],
-  preparedDeck: cardDeckOPNV,
 };
 
 const finalVotes = {
@@ -113,29 +91,32 @@ io.on('connection', (socket) => {
   });
 
   socket.on('set user', (user) => {
-    switch (user.role) {
-      case 'debater':
-        if (game.debater1ID == '') {
-          game.debater1ID = socket.id;
-          game.debater1Name = user.name;
-          game.debater1Avi = user.avi;
+    if (socket.id != game.debater1ID && socket.id != game.debater2ID) {
+      console.log(`user ${socket.id} has joined user obj is ${user}`);
+      switch (user.role) {
+        case 'debater':
+          if (game.debater1ID == '') {
+            game.debater1ID = socket.id;
+            game.debater1Name = user.name;
+            game.debater1Avi = user.avi;
+            break;
+          }
+          if (game.debater1ID != '') {
+            game.debater2ID = socket.id;
+            game.debater2Name = user.name;
+            game.debater2Avi = user.avi;
+          }
           break;
-        }
-        if (game.debater1ID != '') {
-          game.debater2ID = socket.id;
-          game.debater2Name = user.name;
-          game.debater2Avi = user.avi;
-        }
-        break;
-      case 'judge':
-        game.judgeID = socket.id;
-        game.judgeName = user.name;
-        game.judgeAvi = user.avi;
-        break;
-      case 'spectator':
-        game.spectatorID.push(socket.id);
-      default:
-        break;
+        case 'judge':
+          game.judgeID = socket.id;
+          game.judgeName = user.name;
+          game.judgeAvi = user.avi;
+          break;
+        case 'spectator':
+          game.spectatorID.push(socket.id);
+        default:
+          break;
+      }
     }
     //if both players exist, decided what roles each get
     if (game.debater1ID != '' && game.debater2ID != '') {
@@ -201,6 +182,27 @@ io.on('connection', (socket) => {
   });
 
   socket.on('reset', () => {
+    const resetGame = {
+      claim: '',
+      debater1ID: '',
+      debater1Name: '',
+      debater2ID: '',
+      debater2Name: '',
+      affirmativeID: '',
+      affirmativeName: '',
+      affirmativeAvi: '',
+      negativeID: '',
+      negativeName: '',
+      negativeAvi: '',
+      judgeID: '',
+      judgeName: '',
+      judgeAvi: '',
+      spectatorID: [],
+      round: 1,
+      cardList: [],
+      chatList: [],
+      pastRounds: [],
+    };
     console.log('game has been reset');
     game = resetGame;
     console.log(game);
@@ -230,6 +232,7 @@ io.on('connection', (socket) => {
   socket.on('final ruling', (e) => {
     io.emit('final ruling', e);
   });
+
   socket.on('chat message', (msg) => {
     const msgObj = {
       name: msg.name,
@@ -245,7 +248,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('emit sound', (sound) => {
-    io.emit('emit sound', sound);
+    io.emit('play sound', sound);
   });
 
   socket.on('disconnect', () => {

@@ -36,7 +36,7 @@ let game = {
   judgeID: '',
   judgeName: '',
   judgeAvi: '',
-  spectatorID: [],
+  spectators: [],
   round: 1,
   cardList: [],
   chatList: [],
@@ -55,6 +55,7 @@ const finalVotes = {
 //    role: 'affirmative',
 //    judgeRating: 0,
 //    spectatorRating: 0,
+//    whoVoted []
 //  }
 
 function pushToUserArray(arr, obj) {
@@ -68,8 +69,6 @@ function pushToUserArray(arr, obj) {
     arr[index] = obj;
   }
 }
-
-function pushToCardList(arr, obj) {}
 
 io.on('connection', (socket) => {
   socket.emit('your id', socket.id);
@@ -85,7 +84,7 @@ io.on('connection', (socket) => {
   socket.on('rate card', (msg) => {
     if (game.judgeID == socket.id)
       game.cardList[msg.index].judgeRating += msg.rating;
-    if (game.spectatorID.includes(socket.id)) {
+    if (game.spectators.includes(socket.id)) {
       console.log('spec voting');
       game.cardList[msg.index].spectatorRating += msg.rating;
     }
@@ -115,7 +114,7 @@ io.on('connection', (socket) => {
           game.judgeAvi = user.avi;
           break;
         case 'spectator':
-          game.spectatorID.push(socket.id);
+          game.spectators.push(user.name);
         default:
           break;
       }
@@ -202,7 +201,7 @@ io.on('connection', (socket) => {
       judgeID: '',
       judgeName: '',
       judgeAvi: '',
-      spectatorID: [],
+      spectators: [],
       round: 1,
       cardList: [],
       chatList: [],
@@ -210,7 +209,6 @@ io.on('connection', (socket) => {
     };
     console.log('game has been reset');
     game = resetGame;
-    console.log(game);
     io.emit('game', game);
   });
   socket.on('send final vote', (obj) => {

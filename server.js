@@ -25,8 +25,10 @@ let game = {
   topicID: 0,
   debater1ID: '',
   debater1Name: '',
+  debater1Avi: '-1',
   debater2ID: '',
   debater2Name: '',
+  debater2Avi: '-1',
   affirmativeID: '',
   affirmativeName: '',
   affirmativeAvi: '',
@@ -35,7 +37,7 @@ let game = {
   negativeAvi: '',
   judgeID: '',
   judgeName: '',
-  judgeAvi: '',
+  judgeAvi: '-1',
   spectators: [],
   round: 1,
   cardList: [],
@@ -92,33 +94,37 @@ io.on('connection', (socket) => {
   });
 
   socket.on('set user', (user) => {
-    if (socket.id != game.debater1ID && socket.id != game.debater2ID) {
-      console.log(`user ${socket.id} has joined user obj is ${user}`);
-      switch (user.role) {
-        case 'debater':
-          if (game.debater1ID == '') {
-            game.debater1ID = socket.id;
-            game.debater1Name = user.name;
-            game.debater1Avi = user.avi;
-            break;
-          }
-          if (game.debater1ID != '') {
-            game.debater2ID = socket.id;
-            game.debater2Name = user.name;
-            game.debater2Avi = user.avi;
-          }
-          break;
-        case 'judge':
-          game.judgeID = socket.id;
-          game.judgeName = user.name;
-          game.judgeAvi = user.avi;
-          break;
-        case 'spectator':
-          game.spectators.push(user.name);
-        default:
-          break;
-      }
+    switch (user.role) {
+      case 'player1':
+        if (!game.debater1ID) {
+          game.debater1ID = socket.id;
+          game.debater1Name = user.name;
+        }
+        if (game.debater1ID == socket.id) {
+          game.debater1Avi = user.avi;
+        }
+
+        break;
+      case 'player2':
+        if (!game.debater2ID) {
+          game.debater2ID = socket.id;
+          game.debater2Name = user.name;
+        }
+        if (game.debater2ID == socket.id) {
+          game.debater2Avi = user.avi;
+        }
+        break;
+      case 'judge':
+        game.judgeID = socket.id;
+        game.judgeName = user.name;
+        game.judgeAvi = user.avi;
+        break;
+      case 'spectator':
+        game.spectators.push(user.name);
+      default:
+        break;
     }
+
     //if both players exist, decided what roles each get
     if (game.debater1ID != '' && game.debater2ID != '') {
       const rand = Math.random();
@@ -140,8 +146,6 @@ io.on('connection', (socket) => {
         game.affirmativeAvi = game.debater2Avi;
       }
     }
-    console.log(game);
-    console.log('user ' + socket.id + ' has set their role to ' + user.role);
     io.emit('game', game);
     if (game.affirmativeID && game.negativeID && game.judgeID) {
       io.emit('get ready');
@@ -191,8 +195,10 @@ io.on('connection', (socket) => {
       debater1ID: '',
       debater1Name: '',
       debater2ID: '',
+      debater1Avi: '-1',
       debater2Name: '',
       affirmativeID: '',
+      debater2Avi: '-1',
       affirmativeName: '',
       affirmativeAvi: '',
       negativeID: '',
@@ -200,7 +206,7 @@ io.on('connection', (socket) => {
       negativeAvi: '',
       judgeID: '',
       judgeName: '',
-      judgeAvi: '',
+      judgeAvi: '-1',
       spectators: [],
       round: 1,
       cardList: [],

@@ -147,6 +147,8 @@ io.on('connection', (socket) => {
       }
     }
     io.emit('game', game);
+    console.log(game);
+    console.log('user ' + socket.id + ' has set their role to ' + user.role);
     if (game.affirmativeID && game.negativeID && game.judgeID) {
       io.emit('get ready');
     }

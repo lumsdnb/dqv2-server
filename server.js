@@ -84,8 +84,10 @@ io.on('connection', (socket) => {
     io.emit('topic', topic);
   });
   socket.on('rate card', (msg) => {
-    if (game.judgeID == socket.id)
-      game.cardList[msg.index].judgeRating += msg.rating;
+    console.log(msg);
+    if (game.judgeID == socket.id) {
+      game.cardList[msg.index].judgeRating == msg.rating;
+    }
     if (game.spectators.includes(socket.id)) {
       console.log('spec voting');
       game.cardList[msg.index].spectatorRating += msg.rating;
@@ -183,6 +185,7 @@ io.on('connection', (socket) => {
         io.emit('game', game);
         io.emit('next round');
       }
+
       if (game.round > 4) {
         io.emit('game', game);
         io.emit('please vote');

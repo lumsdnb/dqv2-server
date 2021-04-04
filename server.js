@@ -66,10 +66,7 @@ function pushToUserArray(arr, obj) {
   if (index === -1) {
     console.log("new user, pushing to array");
     arr.push(obj);
-  } else {
-    console.log("overwriting role");
-    arr[index] = obj;
-  }
+  } else return;
 }
 
 io.on("connection", (socket) => {
@@ -84,14 +81,27 @@ io.on("connection", (socket) => {
     io.emit("topic", topic);
   });
   socket.on("rate card", (msg) => {
-    console.log(msg);
     if (game.judgeID == socket.id) {
-      game.cardList[msg.index].judgeRating == msg.rating;
+      console.log(
+        `judge rating: ${game.cardList[msg.index].judgeRating}, new rating: ${
+          msg.rating
+        }`
+      );
+      game.cardList[msg.index].judgeRating += msg.rating;
     }
-    if (game.spectators.includes(socket.id)) {
-      console.log("spec voting");
-      game.cardList[msg.index].spectatorRating += msg.rating;
+    console.log(game.cardList);
+    console.log(game.spectators.findIndex((s) => s.id === socket.id));
+    switch (game.spectators.findIndex((s) => s.id === socket.id)) {
+      case -1:
+        break;
+
+      default:
+        console.log("spec voting");
+        game.cardList[msg.index].spectatorRating += msg.rating;
+
+        break;
     }
+
     io.emit("game", game);
   });
 
@@ -122,7 +132,15 @@ io.on("connection", (socket) => {
         game.judgeAvi = user.avi;
         break;
       case "spectator":
-        game.spectators.push(user.name);
+        pushToUserArray(game.spectators, { name: user.name, id: socket.id });
+        const joinedChatMsg = {
+          name: user.name,
+          body: "ist dem Chat beigetreten",
+          id: socket.id,
+        };
+        game.chatList.push(joinedChatMsg);
+        io.emit("chat messages", game.chatList);
+        break;
       default:
         break;
     }
@@ -148,8 +166,8 @@ io.on("connection", (socket) => {
         game.affirmativeAvi = game.debater2Avi;
       }
     }
-    io.emit("game", game);
     console.log(game);
+    io.emit("game", game);
     console.log("user " + socket.id + " has set their role to " + user.role);
     if (game.affirmativeID && game.negativeID && game.judgeID) {
       io.emit("get ready");
@@ -271,6 +289,7 @@ io.on("connection", (socket) => {
         name: game.judgeName,
         body: "ruhe!",
         id: game.judgeID,
+        type: "notification",
       };
       game.chatList.push(msgObj);
       io.emit("chat messages", game.chatList);
@@ -279,6 +298,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
+    console.log("user has disconnected");
     //todo: reimplement this
     //var i = allClients.findIndex((x) => x.ID === socket.id);
     //console.log(allClients);

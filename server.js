@@ -49,7 +49,7 @@ const finalVotes = {
   aff: "",
   neg: "",
   judge: "",
-  spectator1: "",
+  spectators: "",
 };
 
 //  {
@@ -241,6 +241,7 @@ io.on("connection", (socket) => {
     };
     console.log("game has been reset");
     game = resetGame;
+    io.emit("game reset");
     io.emit("game", game);
   });
   socket.on("send final vote", (obj) => {

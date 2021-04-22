@@ -1,19 +1,19 @@
-const express = require("express");
-const http = require("http");
-const fs = require("fs");
+const express = require('express');
+const http = require('http');
+const fs = require('fs');
 
 // ----------------- SERVER SETUP -----------------
 const port = process.env.PORT || 4000;
-const index = require("./routes/index");
+const index = require('./routes/index');
 
 const app = express();
 app.use(index);
 
 const server = http.createServer(app);
-const io = require("socket.io")(server, {
+const io = require('socket.io')(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
+    origin: '*',
+    methods: ['GET', 'POST'],
     optionsSuccessStatus: 200,
   },
 });
@@ -21,23 +21,23 @@ const io = require("socket.io")(server, {
 // ----------------- GAME LOGIC -----------------
 
 let game = {
-  claim: "",
+  claim: '',
   topicID: 0,
-  debater1ID: "",
-  debater1Name: "",
-  debater1Avi: "-1",
-  debater2ID: "",
-  debater2Name: "",
-  debater2Avi: "-1",
-  affirmativeID: "",
-  affirmativeName: "",
-  affirmativeAvi: "",
-  negativeID: "",
-  negativeName: "",
-  negativeAvi: "",
-  judgeID: "",
-  judgeName: "",
-  judgeAvi: "-1",
+  debater1ID: '',
+  debater1Name: '',
+  debater1Avi: '-1',
+  debater2ID: '',
+  debater2Name: '',
+  debater2Avi: '-1',
+  affirmativeID: '',
+  affirmativeName: '',
+  affirmativeAvi: '',
+  negativeID: '',
+  negativeName: '',
+  negativeAvi: '',
+  judgeID: '',
+  judgeName: '',
+  judgeAvi: '-1',
   spectators: [],
   round: 1,
   cardList: [],
@@ -46,10 +46,10 @@ let game = {
 };
 
 const finalVotes = {
-  aff: "",
-  neg: "",
-  judge: "",
-  spectators: "",
+  aff: '',
+  neg: '',
+  judge: '',
+  spectators: '',
 };
 
 //  {
@@ -64,23 +64,23 @@ function pushToUserArray(arr, obj) {
   const index = arr.findIndex((e) => e.id === obj.id);
   console.log(index);
   if (index === -1) {
-    console.log("new user, pushing to array");
+    console.log('new user, pushing to array');
     arr.push(obj);
   } else return;
 }
 
-io.on("connection", (socket) => {
-  socket.emit("your id", socket.id);
-  socket.emit("game", game);
-  socket.emit("topic id", game.topicID);
-  console.log(socket.id + " has connected");
+io.on('connection', (socket) => {
+  socket.emit('your id', socket.id);
+  socket.emit('game', game);
+  socket.emit('topic id', game.topicID);
+  console.log(socket.id + ' has connected');
 
-  socket.on("set topic", (topic) => {
+  socket.on('set topic', (topic) => {
     game.claim = topic;
     console.log(game);
-    io.emit("topic", topic);
+    io.emit('topic', topic);
   });
-  socket.on("rate card", (msg) => {
+  socket.on('rate card', (msg) => {
     if (game.judgeID == socket.id) {
       console.log(
         `judge rating: ${game.cardList[msg.index].judgeRating}, new rating: ${
@@ -96,18 +96,18 @@ io.on("connection", (socket) => {
         break;
 
       default:
-        console.log("spec voting");
+        console.log('spec voting');
         game.cardList[msg.index].spectatorRating += msg.rating;
 
         break;
     }
 
-    io.emit("game", game);
+    io.emit('game', game);
   });
 
-  socket.on("set user", (user) => {
+  socket.on('set user', (user) => {
     switch (user.role) {
-      case "player1":
+      case 'player1':
         if (!game.debater1ID) {
           game.debater1ID = socket.id;
           game.debater1Name = user.name;
@@ -117,7 +117,7 @@ io.on("connection", (socket) => {
         }
 
         break;
-      case "player2":
+      case 'player2':
         if (!game.debater2ID) {
           game.debater2ID = socket.id;
           game.debater2Name = user.name;
@@ -126,27 +126,31 @@ io.on("connection", (socket) => {
           game.debater2Avi = user.avi;
         }
         break;
-      case "judge":
+      case 'judge':
         game.judgeID = socket.id;
         game.judgeName = user.name;
         game.judgeAvi = user.avi;
         break;
-      case "spectator":
-        pushToUserArray(game.spectators, { name: user.name, id: socket.id });
+      case 'spectator':
+        pushToUserArray(game.spectators, {
+          name: user.name,
+          id: socket.id,
+          avi: user.avi,
+        });
         const joinedChatMsg = {
           name: user.name,
-          body: "ist dem Chat beigetreten",
+          body: 'ist dem Chat beigetreten',
           id: socket.id,
         };
         game.chatList.push(joinedChatMsg);
-        io.emit("chat messages", game.chatList);
+        io.emit('chat messages', game.chatList);
         break;
       default:
         break;
     }
 
     //if both players exist, decided what roles each get
-    if (game.debater1ID != "" && game.debater2ID != "") {
+    if (game.debater1ID != '' && game.debater2ID != '') {
       const rand = Math.random();
       console.log(rand);
       if (rand > 0.5) {
@@ -167,35 +171,35 @@ io.on("connection", (socket) => {
       }
     }
     console.log(game);
-    io.emit("game", game);
-    console.log("user " + socket.id + " has set their role to " + user.role);
+    io.emit('game', game);
+    console.log('user ' + socket.id + ' has set their role to ' + user.role);
     if (game.affirmativeID && game.negativeID && game.judgeID) {
-      io.emit("get ready");
+      io.emit('get ready');
     }
   });
 
-  socket.on("start round", (users) => {
-    io.emit("");
+  socket.on('start round', (users) => {
+    io.emit('');
   });
-  socket.on("start timer", () => {
-    io.emit("start round timer");
+  socket.on('start timer', () => {
+    io.emit('start round timer');
   });
-  socket.on("topic number", (id) => {
+  socket.on('topic number', (id) => {
     game.topicID = id;
-    io.emit("topic id", id);
+    io.emit('topic id', id);
   });
-  socket.on("send message", (msg) => {
+  socket.on('send message', (msg) => {
     if (game.judgeID != socket.id) {
       game.cardList.push(msg);
-      io.emit("message", game.cardList);
-      io.emit("latest card", msg);
+      io.emit('message', game.cardList);
+      io.emit('latest card', msg);
     }
     if (game.judgeID == socket.id) {
-      io.emit("judge ruling", msg.body);
+      io.emit('judge ruling', msg.body);
     }
     console.log(game.cardList);
   });
-  socket.on("next round", () => {
+  socket.on('next round', () => {
     if (game.judgeID == socket.id) {
       game.pastRounds.push(game.cardList);
       console.log(`round ${game.round} - moving on..`);
@@ -203,58 +207,58 @@ io.on("connection", (socket) => {
 
       if (game.round <= 4) {
         game.round += 1;
-        io.emit("game", game);
-        io.emit("next round");
+        io.emit('game', game);
+        io.emit('next round');
       }
 
       if (game.round > 4) {
-        io.emit("game", game);
-        io.emit("please vote");
+        io.emit('game', game);
+        io.emit('please vote');
       }
     }
   });
 
-  socket.on("reset", () => {
+  socket.on('reset', () => {
     const resetGame = {
-      claim: "",
+      claim: '',
       topicID: 0,
-      debater1ID: "",
-      debater1Name: "",
-      debater2ID: "",
-      debater1Avi: "-1",
-      debater2Name: "",
-      affirmativeID: "",
-      debater2Avi: "-1",
-      affirmativeName: "",
-      affirmativeAvi: "",
-      negativeID: "",
-      negativeName: "",
-      negativeAvi: "",
-      judgeID: "",
-      judgeName: "",
-      judgeAvi: "-1",
+      debater1ID: '',
+      debater1Name: '',
+      debater2ID: '',
+      debater1Avi: '-1',
+      debater2Name: '',
+      affirmativeID: '',
+      debater2Avi: '-1',
+      affirmativeName: '',
+      affirmativeAvi: '',
+      negativeID: '',
+      negativeName: '',
+      negativeAvi: '',
+      judgeID: '',
+      judgeName: '',
+      judgeAvi: '-1',
       spectators: [],
       round: 1,
       cardList: [],
       chatList: [],
       pastRounds: [],
     };
-    console.log("game has been reset");
+    console.log('game has been reset');
     game = resetGame;
-    io.emit("game reset");
-    io.emit("game", game);
+    io.emit('game reset');
+    io.emit('game', game);
   });
-  socket.on("send final vote", (obj) => {
+  socket.on('send final vote', (obj) => {
     switch (obj.role) {
-      case "affirmative":
+      case 'affirmative':
         finalVotes.aff = obj.vote;
         break;
-      case "negative":
+      case 'negative':
         finalVotes.neg = obj.vote;
-      case "judge":
+      case 'judge':
         finalVotes.judge = obj.vote;
         break;
-      case "spectator":
+      case 'spectator':
         finalVotes.spectator = obj.vote;
         break;
 
@@ -262,14 +266,14 @@ io.on("connection", (socket) => {
         break;
     }
     console.log(finalVotes);
-    io.emit("final votes", finalVotes);
+    io.emit('final votes', finalVotes);
   });
 
-  socket.on("final ruling", (e) => {
-    io.emit("final ruling", e);
+  socket.on('final ruling', (e) => {
+    io.emit('final ruling', e);
   });
 
-  socket.on("chat message", (msg) => {
+  socket.on('chat message', (msg) => {
     const msgObj = {
       name: msg.name,
       body: msg.body,
@@ -277,29 +281,33 @@ io.on("connection", (socket) => {
     };
     game.chatList.push(msg);
     console.log(game.chatList);
-    io.emit("chat messages", game.chatList);
+    io.emit('chat messages', game.chatList);
   });
 
-  socket.on("end game", (msg) => {
-    io.emit("finish game", msg);
+  socket.on('end game', (msg) => {
+    io.emit('finish game', msg);
   });
 
-  socket.on("emit sound", (sound) => {
-    if (sound == "gavel") {
+  socket.on('silence chat', () => {
+    if (socket.id == game.judgeID) {
       const msgObj = {
         name: game.judgeName,
-        body: "ruhe!",
+        body: 'ruhe!',
         id: game.judgeID,
-        type: "notification",
+        type: 'notification',
       };
       game.chatList.push(msgObj);
-      io.emit("chat messages", game.chatList);
+      io.emit('chat messages', game.chatList);
+      io.emit('play sound', 'gavel');
     }
-    io.emit("play sound", sound);
   });
 
-  socket.on("disconnect", () => {
-    console.log("user has disconnected");
+  socket.on('emit sound', (sound) => {
+    io.emit('play sound', sound);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('user has disconnected');
     //todo: reimplement this
     //var i = allClients.findIndex((x) => x.ID === socket.id);
     //console.log(allClients);

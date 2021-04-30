@@ -82,6 +82,7 @@ io.on('connection', (socket) => {
       console.log(`player downvoted card`);
       game.cardList[msg.index].downVotes -= 1;
     }
+
     if (msg.rating === 3) {
       console.log(`player doesnt understand card`);
       game.cardList[msg.index].numberOfQuestions += 1;
@@ -134,27 +135,6 @@ io.on('connection', (socket) => {
         break;
     }
 
-    //if both players exist, decided what roles each get
-    if (game.debater1ID != '' && game.debater2ID != '') {
-      const rand = Math.random();
-      console.log(rand);
-      if (rand > 0.5) {
-        game.affirmativeID = game.debater1ID;
-        game.affirmativeName = game.debater1Name;
-        game.affirmativeAvi = game.debater1Avi;
-        game.negativeID = game.debater2ID;
-        game.negativeName = game.debater2Name;
-        game.negativeAvi = game.debater2Avi;
-      }
-      if (rand < 0.5) {
-        game.negativeID = game.debater1ID;
-        game.negativeName = game.debater1Name;
-        game.negativeAvi = game.debater1Avi;
-        game.affirmativeID = game.debater2ID;
-        game.affirmativeName = game.debater2Name;
-        game.affirmativeAvi = game.debater2Avi;
-      }
-    }
     console.log(game);
     io.emit('game', game);
     console.log('user ' + socket.id + ' has set their role to ' + user.role);

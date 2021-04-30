@@ -45,13 +45,6 @@ let game = {
   pastRounds: [],
 };
 
-const finalVotes = {
-  aff: '',
-  neg: '',
-  judge: '',
-  spectators: '',
-};
-
 //  {
 //    body: 'fuk u',
 //    role: 'affirmative',
@@ -81,27 +74,19 @@ io.on('connection', (socket) => {
     io.emit('topic', topic);
   });
   socket.on('rate card', (msg) => {
-    if (game.judgeID == socket.id) {
-      console.log(
-        `judge rating: ${game.cardList[msg.index].judgeRating}, new rating: ${
-          msg.rating
-        }`
-      );
-      game.cardList[msg.index].judgeRating += msg.rating;
+    if (msg.rating === 1) {
+      console.log(`player upvoted card`);
+      game.cardList[msg.index].upVotes += 1;
+    }
+    if (msg.rating === -1) {
+      console.log(`player downvoted card`);
+      game.cardList[msg.index].downVotes -= 1;
+    }
+    if (msg.rating === 3) {
+      console.log(`player doesnt understand card`);
+      game.cardList[msg.index].numberOfQuestions += 1;
     }
     console.log(game.cardList);
-    console.log(game.spectators.findIndex((s) => s.id === socket.id));
-    switch (game.spectators.findIndex((s) => s.id === socket.id)) {
-      case -1:
-        break;
-
-      default:
-        console.log('spec voting');
-        game.cardList[msg.index].spectatorRating += msg.rating;
-
-        break;
-    }
-
     io.emit('game', game);
   });
 
@@ -247,26 +232,6 @@ io.on('connection', (socket) => {
     game = resetGame;
     io.emit('game reset');
     io.emit('game', game);
-  });
-  socket.on('send final vote', (obj) => {
-    switch (obj.role) {
-      case 'affirmative':
-        finalVotes.aff = obj.vote;
-        break;
-      case 'negative':
-        finalVotes.neg = obj.vote;
-      case 'judge':
-        finalVotes.judge = obj.vote;
-        break;
-      case 'spectator':
-        finalVotes.spectator = obj.vote;
-        break;
-
-      default:
-        break;
-    }
-    console.log(finalVotes);
-    io.emit('final votes', finalVotes);
   });
 
   socket.on('final ruling', (e) => {

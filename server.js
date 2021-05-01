@@ -1,6 +1,7 @@
 const express = require('express');
 const http = require('http');
 const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
 
 // ----------------- SERVER SETUP -----------------
 const port = process.env.PORT || 4000;
@@ -154,14 +155,11 @@ io.on('connection', (socket) => {
     io.emit('topic id', id);
   });
   socket.on('send message', (msg) => {
-    if (game.judgeID != socket.id) {
-      game.cardList.push(msg);
-      io.emit('message', game.cardList);
-      io.emit('latest card', msg);
-    }
-    if (game.judgeID == socket.id) {
-      io.emit('judge ruling', msg.body);
-    }
+    msg.id = uuidv4();
+    game.cardList.push(msg);
+    io.emit('message', game.cardList);
+    io.emit('latest card', msg);
+
     console.log(game.cardList);
   });
   socket.on('next round', () => {

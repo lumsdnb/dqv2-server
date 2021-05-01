@@ -20,7 +20,8 @@
   "homepage": "https://github.com/lumsdnb/cardgame-prototype#readme",
   "dependencies": {
     "express": "^4.17.1",
-    "socket.io": "^3.1.2"
+    "socket.io": "^3.1.2",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "jest": "^26.6.3"

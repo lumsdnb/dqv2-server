@@ -74,6 +74,16 @@ io.on('connection', (socket) => {
     console.log(game);
     io.emit('topic', topic);
   });
+  socket.on('clear table', () => {
+    game.cardList = [];
+    io.emit('game', game);
+  });
+  socket.on('request topic', (t) => {
+    io.emit('requested topic change', t);
+  });
+  socket.on('accept topic change', () => {
+    console.log(`${socket.id} has accepted new topic`);
+  });
   socket.on('rate card', (msg) => {
     if (msg.rating === 1) {
       console.log(`player upvoted card`);

@@ -23,6 +23,7 @@ const io = require('socket.io')(server, {
 
 let game = {
   claim: '',
+  requestedTopic: '',
   topicID: 0,
   debater1ID: '',
   debater1Name: '',
@@ -79,10 +80,15 @@ io.on('connection', (socket) => {
     io.emit('game', game);
   });
   socket.on('request topic', (t) => {
+    game.requestedTopic = t;
     io.emit('requested topic change', t);
   });
   socket.on('accept topic change', () => {
     console.log(`${socket.id} has accepted new topic`);
+    game.cardList = [];
+    game.topic = game.requestedTopic;
+    io.emit('game', game);
+    io.emit('topic', game.topic);
   });
   socket.on('rate card', (msg) => {
     if (msg.rating === 1) {
